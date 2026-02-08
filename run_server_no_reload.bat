@@ -1,0 +1,6 @@
+@echo off
+setlocal
+
+REM No-reload server (recommended while playing from client)
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+

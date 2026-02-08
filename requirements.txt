@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+pydantic
+pytest
+fastapi
+uvicorn[standard]
+pydantic
+pytest
