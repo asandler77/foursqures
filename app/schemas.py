@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field, model_validator
 
 
 class CreateGameIn(BaseModel):
-    piecesPerPlayer: int = Field(default=8, ge=1, le=18)
+    piecesPerPlayer: int = Field(default=16, ge=1, le=16)
 
 
 class CreateGameOut(BaseModel):

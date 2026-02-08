@@ -72,3 +72,22 @@ def test_slide_only_adjacent_to_hole() -> None:
 
     with pytest.raises(IllegalMove):
         apply_slide(s, squareIndex=0, player=PlayerColor.R)
+
+
+def test_cannot_slide_same_square_as_previous_slide() -> None:
+    # Reach movement phase quickly (1 piece each), then verify backtracking is blocked.
+    s = new_state(pieces_per_player=1)
+    apply_place(s, squareIndex=0, slotIndex=0, player=PlayerColor.R)
+    apply_slide(s, squareIndex=3, player=PlayerColor.R)  # hole: 4 -> 3
+    apply_place(s, squareIndex=8, slotIndex=0, player=PlayerColor.B)
+    apply_slide(s, squareIndex=0, player=PlayerColor.B)  # hole: 3 -> 0 (movement starts, R turn)
+    assert s.phase == Phase.movement
+    assert s.currentPlayer == PlayerColor.R
+
+    # R slides square 1 into hole 0 => moved square now sits at index 0, and must be blocked next.
+    apply_slide(s, squareIndex=1, player=PlayerColor.R)  # hole: 0 -> 1
+    assert s.currentPlayer == PlayerColor.B
+
+    # B would normally be able to slide square 0 into hole 1 (immediate backtrack), but it's forbidden.
+    with pytest.raises(IllegalMove):
+        apply_slide(s, squareIndex=0, player=PlayerColor.B)

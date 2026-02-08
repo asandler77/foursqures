@@ -26,6 +26,9 @@ class GameState:
     placed: dict[PlayerColor, int]
     piecesPerPlayer: int
     holeSquareIndex: int
+    # New rule: cannot slide the same square that was slid on the previous turn.
+    # We store the square index where the last-slid square currently sits (the previous hole index).
+    blockedSlideSquareIndex: Optional[int] = None
     winner: Optional[PlayerColor] = None
     drawReason: Optional[str] = None
 
@@ -34,7 +37,7 @@ class IllegalMove(ValueError):
     pass
 
 
-def new_state(*, pieces_per_player: int = 8) -> GameState:
+def new_state(*, pieces_per_player: int = 16) -> GameState:
     if pieces_per_player <= 0:
         raise ValueError("piecesPerPlayer must be positive")
 
@@ -45,6 +48,7 @@ def new_state(*, pieces_per_player: int = 8) -> GameState:
         placed={PlayerColor.R: 0, PlayerColor.B: 0},
         piecesPerPlayer=pieces_per_player,
         holeSquareIndex=4,
+        blockedSlideSquareIndex=None,
         winner=None,
         drawReason=None,
     )
@@ -106,6 +110,9 @@ def legal_slide_squares(state: GameState) -> list[int]:
         r, c = hr + dr, hc + dc
         if 0 <= r <= 2 and 0 <= c <= 2:
             out.append(r * 3 + c)
+    # New rule: disallow sliding the same square as previous slide (prevents immediate backtracking).
+    if state.blockedSlideSquareIndex is not None:
+        out = [i for i in out if i != state.blockedSlideSquareIndex]
     return out
 
 
@@ -156,6 +163,8 @@ def apply_slide(state: GameState, *, squareIndex: int, player: PlayerColor) -> N
     _assert_square_index(squareIndex)
     if squareIndex == state.holeSquareIndex:
         raise IllegalMove("cannot slide the hole")
+    if state.blockedSlideSquareIndex is not None and squareIndex == state.blockedSlideSquareIndex:
+        raise IllegalMove("cannot slide the same square as the previous slide")
     if squareIndex not in legal_slide_squares(state):
         raise IllegalMove("square is not adjacent to the hole")
 
@@ -163,6 +172,9 @@ def apply_slide(state: GameState, *, squareIndex: int, player: PlayerColor) -> N
     h = state.holeSquareIndex
     state.board[h], state.board[squareIndex] = state.board[squareIndex], state.board[h]
     state.holeSquareIndex = squareIndex
+    # Block moving the same square on the next slide:
+    # the moved square now sits at the previous hole index (h).
+    state.blockedSlideSquareIndex = h
 
     w = detect_winner(state)
     if w is not None:
@@ -196,6 +208,7 @@ def to_public_json(state: GameState) -> dict:
         # Helpful for clients: which squares can be slid into the hole right now.
         # (Must be left/right/up/down adjacent to holeSquareIndex; diagonals are never included.)
         "legalSlides": legal_slide_squares(state),
+        "blockedSlideSquareIndex": state.blockedSlideSquareIndex,
         "winner": state.winner.value if state.winner is not None else None,
         "drawReason": state.drawReason,
     }

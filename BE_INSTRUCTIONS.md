@@ -37,7 +37,7 @@ The server is the **source of truth** for rules & validation, and plays as the *
 - Red always goes first
 
 ### Pieces
-- Default: **8 per player** (16 total, configurable via `piecesPerPlayer`)
+- Default: **16 per player** (32 total, configurable via `piecesPerPlayer`, max 16)
 
 ### Turn structure
 
@@ -133,7 +133,7 @@ pytest
 **Request:**
 ```json
 {
-  "piecesPerPlayer": 8
+  "piecesPerPlayer": 16
 }
 ```
 
