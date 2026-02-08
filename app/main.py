@@ -52,12 +52,29 @@ async def move(game_id: str, body: MoveIn) -> GameStateOut:
             player = PlayerColor(p.color.value)
             if body.action == "place":
                 assert body.slotIndex is not None
+                assert body.squareIndex is not None
                 apply_place(g.state, squareIndex=body.squareIndex, slotIndex=body.slotIndex, player=player)
                 # Optional: allow client to include the required slide in the same request
                 if body.slideSquareIndex is not None and g.state.winner is None and g.state.drawReason is None:
                     apply_slide(g.state, squareIndex=body.slideSquareIndex, player=player)
             else:
-                apply_slide(g.state, squareIndex=body.squareIndex, player=player)
+                # Support slide payload styles:
+                # A) New client: {fromSquareIndex, toHoleSquareIndex}
+                if body.toHoleSquareIndex is not None:
+                    assert body.fromSquareIndex is not None
+                    if body.toHoleSquareIndex != g.state.holeSquareIndex:
+                        raise IllegalMove("toHoleSquareIndex must equal the current holeSquareIndex")
+                    apply_slide(g.state, squareIndex=body.fromSquareIndex, player=player)
+                # B) Legacy-alt: {squareIndex: hole, fromSquareIndex}
+                elif body.fromSquareIndex is not None:
+                    assert body.squareIndex is not None
+                    if body.squareIndex != g.state.holeSquareIndex:
+                        raise IllegalMove("squareIndex must equal the current holeSquareIndex when using fromSquareIndex")
+                    apply_slide(g.state, squareIndex=body.fromSquareIndex, player=player)
+                # C) Legacy: {squareIndex: fromSquareIndex}
+                else:
+                    assert body.squareIndex is not None
+                    apply_slide(g.state, squareIndex=body.squareIndex, player=player)
         except IllegalMove as e:
             # Match BE_INSTRUCTIONS error shape (no "detail" wrapper)
             return JSONResponse(status_code=400, content={"error": f"Invalid move: {str(e)}"})

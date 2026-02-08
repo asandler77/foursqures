@@ -193,6 +193,9 @@ def to_public_json(state: GameState) -> dict:
         "placed": {k.value: v for k, v in state.placed.items()},
         "piecesPerPlayer": state.piecesPerPlayer,
         "holeSquareIndex": state.holeSquareIndex,
+        # Helpful for clients: which squares can be slid into the hole right now.
+        # (Must be left/right/up/down adjacent to holeSquareIndex; diagonals are never included.)
+        "legalSlides": legal_slide_squares(state),
         "winner": state.winner.value if state.winner is not None else None,
         "drawReason": state.drawReason,
     }
