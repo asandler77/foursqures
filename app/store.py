@@ -19,6 +19,7 @@ class Game:
     id: str
     state: GameState
     red: PlayerInfo
+    ai_mode: str
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
 
@@ -26,11 +27,16 @@ class InMemoryStore:
     def __init__(self) -> None:
         self._games: dict[str, Game] = {}
 
-    def create_game(self, *, pieces_per_player: int = 8) -> Game:
+    def create_game(self, *, pieces_per_player: int = 8, ai_mode: str = "random") -> Game:
         game_id = str(uuid4())
         red_token = str(uuid4())
         state = new_state(pieces_per_player=pieces_per_player)
-        g = Game(id=game_id, state=state, red=PlayerInfo(token=red_token, color=PlayerColor.R))
+        g = Game(
+            id=game_id,
+            state=state,
+            red=PlayerInfo(token=red_token, color=PlayerColor.R),
+            ai_mode=ai_mode,
+        )
         self._games[game_id] = g
         return g
 

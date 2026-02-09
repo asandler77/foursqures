@@ -33,7 +33,7 @@ The server is the **source of truth** for rules & validation, and plays as the *
 
 ### Players
 - Red = `"R"` -- **Human** (client)
-- Blue = `"B"` -- **AI** (server)
+- Blue = `"B"` -- **AI** (server), mode is chosen at game creation
 - Red always goes first
 
 ### Pieces
@@ -133,7 +133,8 @@ pytest
 **Request:**
 ```json
 {
-  "piecesPerPlayer": 16
+  "piecesPerPlayer": 16,
+  "aiMode": "random"
 }
 ```
 
@@ -142,7 +143,8 @@ pytest
 {
   "gameId": "abc123",
   "playerToken": "tok_xxx",
-  "state": { "...GameState..." }
+  "state": { "...GameState..." },
+  "aiMode": "random"
 }
 ```
 

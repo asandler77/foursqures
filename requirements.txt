@@ -1,8 +1,5 @@
 fastapi
-uvicorn[standard]
 pydantic
 pytest
-fastapi
+tensorflow
 uvicorn[standard]
-pydantic
-pytest

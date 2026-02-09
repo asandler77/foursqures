@@ -3,6 +3,7 @@ from __future__ import annotations
 import random
 from typing import Optional
 
+from .ai_player import AIPlayer
 from .game_logic import GameState, Phase, PlayerColor, apply_place, apply_slide, legal_slide_squares
 
 
@@ -17,13 +18,12 @@ def _legal_place_targets(state: GameState) -> list[tuple[int, int]]:
     return out
 
 
-def ai_take_turn(state: GameState, *, rng: Optional[random.Random] = None) -> None:
+def _ai_take_turn_random(state: GameState, *, rng: Optional[random.Random] = None) -> None:
     """
-    Very simple AI:
+    Random AI:
     - In placement: place randomly, then slide randomly.
     - In movement: slide randomly.
     """
-
     if state.winner is not None or state.drawReason is not None:
         return
     if state.currentPlayer != PlayerColor.B:
@@ -49,4 +49,24 @@ def ai_take_turn(state: GameState, *, rng: Optional[random.Random] = None) -> No
             return
         sq = rng.choice(slides)
         apply_slide(state, squareIndex=sq, player=PlayerColor.B)
+
+
+_ai_player = AIPlayer.default()
+
+
+def _ai_take_turn_model(state: GameState, *, rng: Optional[random.Random] = None) -> None:
+    """
+    ML-driven policy using a TensorFlow model.
+    Falls back to random if a trained model is unavailable.
+    """
+    used_model = _ai_player.take_turn(state, rng=rng)
+    if not used_model:
+        _ai_take_turn_random(state, rng=rng)
+
+
+def ai_take_turn(state: GameState, *, mode: str = "random", rng: Optional[random.Random] = None) -> None:
+    if mode == "ai":
+        _ai_take_turn_model(state, rng=rng)
+    else:
+        _ai_take_turn_random(state, rng=rng)
 

@@ -7,12 +7,14 @@ from pydantic import BaseModel, Field, model_validator
 
 class CreateGameIn(BaseModel):
     piecesPerPlayer: int = Field(default=16, ge=1, le=16)
+    aiMode: Literal["random", "ai"] = Field(default="random")
 
 
 class CreateGameOut(BaseModel):
     gameId: str
     playerToken: str
     state: dict
+    aiMode: Literal["random", "ai"]
 
 
 class GameStateOut(BaseModel):

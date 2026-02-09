@@ -18,11 +18,12 @@ def health() -> dict:
 
 @app.post("/games", response_model=CreateGameOut)
 def create_game(body: CreateGameIn) -> CreateGameOut:
-    g = store.create_game(pieces_per_player=body.piecesPerPlayer)
+    g = store.create_game(pieces_per_player=body.piecesPerPlayer, ai_mode=body.aiMode)
     return CreateGameOut(
         gameId=g.id,
         playerToken=g.red.token,
         state=to_public_json(g.state),
+        aiMode=g.ai_mode,
     )
 
 
@@ -81,7 +82,7 @@ async def move(game_id: str, body: MoveIn) -> GameStateOut:
 
         # After a human slide, it may become AI's turn; AI should play automatically.
         if g.state.winner is None and g.state.drawReason is None:
-            ai_take_turn(g.state)
+            ai_take_turn(g.state, mode=g.ai_mode)
 
         return GameStateOut(state=to_public_json(g.state))
 
